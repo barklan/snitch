@@ -85,3 +85,15 @@ func (mr *MockbotMockRecorder) Send(to, what interface{}, opts ...interface{}) *
         varargs := append([]interface{}{to, what}, opts...)
         return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*Mockbot)(nil).Send), varargs...)
 }
+
+// Start mocks base method.
+func (m *Mockbot) Start() {
+        m.ctrl.T.Helper()
+        m.ctrl.Call(m, "Start")
+}
+
+// Start indicates an expected call of Start.
+func (mr *MockbotMockRecorder) Start() *gomock.Call {
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*Mockbot)(nil).Start))
+}

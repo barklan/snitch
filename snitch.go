@@ -48,6 +48,7 @@ type bot interface {
 	ChatByID(id int64) (*tele.Chat, error)
 	Handle(endpoint interface{}, h tele.HandlerFunc, m ...tele.MiddlewareFunc)
 	Send(to tele.Recipient, what interface{}, opts ...interface{}) (*tele.Message, error)
+	Start()
 }
 
 func newBot(conf *Config) (bot, error) {
@@ -101,6 +102,7 @@ func newBackend(conf *Config, b bot, c <-chan string) (*backend, error) {
 }
 
 func (b *backend) start() {
+	b.bot.Start()
 	for msg := range b.c {
 		lastSeenRaw, ok := b.cache.Get(msg)
 		if !ok {

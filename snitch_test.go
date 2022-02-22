@@ -49,6 +49,8 @@ func TestZap(t *testing.T) {
 		m.
 			EXPECT().Handle(gomock.Any(), gomock.Any())
 		m.
+			EXPECT().Start()
+		m.
 			EXPECT().
 			Send(gomock.Any(), gomock.Eq(msg)).MaxTimes(1)
 
@@ -81,6 +83,8 @@ func TestZap(t *testing.T) {
 			EXPECT().Handle(gomock.Any(), gomock.Any())
 		m.
 			EXPECT().Handle(gomock.Any(), gomock.Any())
+		m.
+			EXPECT().Start()
 		m.
 			EXPECT().
 			Send(gomock.Any(), gomock.Any()).Times(4)
