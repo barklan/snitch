@@ -11,14 +11,15 @@ type ZapSnitch struct {
 	L    *zap.Logger
 }
 
-func OnZap(logger *zap.Logger, conf *Config) *ZapSnitch {
+func OnZap(logger *zap.Logger, conf *Config) (*ZapSnitch, error) {
 	c := make(chan string)
+	// FIXME init bot here and return err if needed
 	go reporter(c, conf)
 	return &ZapSnitch{
 		c:    c,
 		conf: conf,
 		L:    logger,
-	}
+	}, nil
 }
 
 func (s *ZapSnitch) Debug(msg string, fields ...zapcore.Field) {
