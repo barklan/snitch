@@ -28,10 +28,11 @@ const (
 )
 
 type Config struct {
-	TGToken  string
-	TGChatID int64
-	Level    Level
-	Cooldown time.Duration
+	TGToken   string
+	TGChatID  int64
+	Level     Level
+	Cooldown  time.Duration
+	CacheSize int
 }
 
 type backend struct {
@@ -60,7 +61,7 @@ func newBot(conf *Config) (bot, error) {
 }
 
 func newBackend(conf *Config, b bot, c <-chan string) (*backend, error) {
-	cache, err := lru.NewARC(5)
+	cache, err := lru.NewARC(conf.CacheSize)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize cache: %w", err)
 	}

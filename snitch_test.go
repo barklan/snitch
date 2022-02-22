@@ -16,10 +16,11 @@ func mockPartialBack(t *testing.T) (*gomock.Controller, chan string, *Config, *m
 
 	m := mock_snitch.NewMockbot(ctrl)
 	conf := &Config{
-		TGToken:  "abc",
-		TGChatID: 342495235534,
-		Level:    InfoLevel,
-		Cooldown: 50 * time.Millisecond,
+		TGToken:   "abc",
+		TGChatID:  342495235534,
+		Level:     InfoLevel,
+		Cooldown:  50 * time.Millisecond,
+		CacheSize: 5,
 	}
 
 	c := make(chan string, 10)
