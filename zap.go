@@ -13,6 +13,7 @@ type ZapSnitch struct {
 	L    *zap.Logger
 }
 
+// Function OnZap constructs wrapper around zap.Logger.
 func OnZap(logger *zap.Logger, conf *Config) (*ZapSnitch, error) {
 	c := make(chan string, 10)
 	b, err := newBot(conf)
@@ -31,6 +32,7 @@ func OnZap(logger *zap.Logger, conf *Config) (*ZapSnitch, error) {
 	}, nil
 }
 
+// Debug directly calls logger.Debug().
 func (s *ZapSnitch) Debug(msg string, fields ...zapcore.Field) {
 	s.L.Debug(msg, fields...)
 }
@@ -56,6 +58,7 @@ func (s *ZapSnitch) Error(msg string, fields ...zapcore.Field) {
 	s.L.Error(msg, fields...)
 }
 
+// Panic snitches if level <= CritLevel and calls logger.Panic().
 func (s *ZapSnitch) Panic(msg string, fields ...zapcore.Field) {
 	if s.Conf.Level <= CritLevel {
 		s.c <- msg
@@ -63,6 +66,7 @@ func (s *ZapSnitch) Panic(msg string, fields ...zapcore.Field) {
 	s.L.Panic(msg, fields...)
 }
 
+// Fatal snitches if level <= CritLevel and calls logger.Fatal().
 func (s *ZapSnitch) Fatal(msg string, fields ...zapcore.Field) {
 	if s.Conf.Level <= CritLevel {
 		s.c <- msg

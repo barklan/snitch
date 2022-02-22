@@ -5,7 +5,6 @@ package snitch
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -51,7 +50,7 @@ type bot interface {
 
 func newBot(conf *Config) (bot, error) {
 	b, err := tele.NewBot(tele.Settings{
-		Token:  os.Getenv(conf.TGToken),
+		Token:  conf.TGToken,
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 	})
 	if err != nil {
