@@ -17,7 +17,7 @@ func mockPartialBack(t *testing.T) (*gomock.Controller, chan string, *Config, *m
 	m := mock_snitch.NewMockbot(ctrl)
 	conf := &Config{
 		TGToken:   "abc",
-		TGChatID:  342495235534,
+		Secret:    "superSecretKey",
 		Level:     InfoLevel,
 		Cooldown:  50 * time.Millisecond,
 		CacheSize: 5,
@@ -45,8 +45,7 @@ func TestZap(t *testing.T) {
 
 		msg := "this is a log message"
 		m.
-			EXPECT().
-			ChatByID(gomock.Eq(conf.TGChatID))
+			EXPECT().Handle(gomock.Any(), gomock.Any())
 		m.
 			EXPECT().Handle(gomock.Any(), gomock.Any())
 		m.
@@ -79,8 +78,7 @@ func TestZap(t *testing.T) {
 
 		msg := "this is a log message"
 		m.
-			EXPECT().
-			ChatByID(gomock.Eq(conf.TGChatID))
+			EXPECT().Handle(gomock.Any(), gomock.Any())
 		m.
 			EXPECT().Handle(gomock.Any(), gomock.Any())
 		m.

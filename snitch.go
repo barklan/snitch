@@ -4,6 +4,7 @@
 package snitch
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"time"
 
@@ -29,7 +30,7 @@ const (
 
 type Config struct {
 	TGToken   string
-	TGChatID  int64
+	Secret    string
 	Level     Level
 	Cooldown  time.Duration
 	CacheSize int
@@ -66,26 +67,37 @@ func newBackend(conf *Config, b bot, c <-chan string) (*backend, error) {
 		return nil, fmt.Errorf("failed to initialize cache: %w", err)
 	}
 
-	chat, err := b.ChatByID(conf.TGChatID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find specified chat: %w", err)
+	backend := &backend{
+		conf:  conf,
+		bot:   b,
+		chat:  nil,
+		c:     c,
+		cache: cache,
 	}
 
 	b.Handle("/start", func(c tele.Context) error {
-		if c.Chat().ID == conf.TGChatID {
-			return c.Send("This chat ID: %d. I am registered for this chat!", c.Chat().ID)
-		} else {
-			return c.Send("This chat ID: %d. I am not registered for this chat!", c.Chat().ID)
+		if backend.chat == nil {
+			c.Send("No chat is registered. Please send me the secret to register this chat.")
+			return nil
+		} else if backend.chat.ID != c.Chat().ID {
+			c.Send("Different chat is registered. Please send me the secret register to this chat.")
+			return nil
 		}
+		c.Send("This chat is registered!")
+		return nil
 	})
 
-	return &backend{
-		conf:  conf,
-		bot:   b,
-		chat:  chat,
-		c:     c,
-		cache: cache,
-	}, nil
+	b.Handle(tele.OnText, func(c tele.Context) error {
+		if subtle.ConstantTimeCompare([]byte(c.Message().Text), []byte(backend.conf.Secret)) == 1 {
+			backend.chat = c.Chat()
+			c.Send("Chat successfully registered!")
+			return nil
+		}
+		c.Send("Wrong secret key!")
+		return nil
+	})
+
+	return backend, nil
 }
 
 func (b *backend) start() {
