@@ -21,6 +21,10 @@ func OnZap(logger *zap.Logger, conf *Config) *ZapSnitch {
 	}
 }
 
+func (s *ZapSnitch) Debug(msg string, fields ...zapcore.Field) {
+	s.L.Debug(msg, fields...)
+}
+
 func (s *ZapSnitch) Info(msg string, fields ...zapcore.Field) {
 	if s.conf.Level >= InfoLevel {
 		s.c <- msg
