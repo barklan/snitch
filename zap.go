@@ -15,12 +15,15 @@ type ZapSnitch struct {
 
 func OnZap(logger *zap.Logger, conf *Config) (*ZapSnitch, error) {
 	c := make(chan string, 10)
-	// FIXME init bot here and return err if needed
-	back, err := newBackend(conf, c)
+	b, err := newBot(conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init tg bot: %w", err)
+	}
+	back, err := newBackend(conf, b, c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start backend: %w", err)
 	}
-	go back.Start()
+	go back.start()
 	return &ZapSnitch{
 		c:    c,
 		conf: conf,
@@ -40,7 +43,7 @@ func (s *ZapSnitch) Info(msg string, fields ...zapcore.Field) {
 }
 
 func (s *ZapSnitch) Warn(msg string, fields ...zapcore.Field) {
-	if s.conf.Level >= WarningLevel {
+	if s.conf.Level >= WarnLevel {
 		s.c <- msg
 	}
 	s.L.Warn(msg, fields...)
@@ -54,14 +57,14 @@ func (s *ZapSnitch) Error(msg string, fields ...zapcore.Field) {
 }
 
 func (s *ZapSnitch) Panic(msg string, fields ...zapcore.Field) {
-	if s.conf.Level >= CriticalLevel {
+	if s.conf.Level >= CritLevel {
 		s.c <- msg
 	}
 	s.L.Panic(msg, fields...)
 }
 
 func (s *ZapSnitch) Fatal(msg string, fields ...zapcore.Field) {
-	if s.conf.Level >= CriticalLevel {
+	if s.conf.Level >= CritLevel {
 		s.c <- msg
 	}
 	s.L.Fatal(msg, fields...)

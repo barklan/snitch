@@ -12,13 +12,20 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
+const (
+	InfoPrefix  = "INFO: "
+	WarnPrefix  = "WARN: "
+	ErrorPrefix = "ERROR: "
+	CritPrefix  = "CRIT: "
+)
+
 type Level uint8
 
 const (
 	InfoLevel Level = iota
-	WarningLevel
+	WarnLevel
 	ErrorLevel
-	CriticalLevel
+	CritLevel
 )
 
 type Config struct {
@@ -29,24 +36,33 @@ type Config struct {
 
 type backend struct {
 	conf  *Config
-	bot   *tele.Bot
+	bot   bot
 	chat  *tele.Chat
 	c     <-chan string
 	cache *lru.ARCCache
 }
 
-func newBackend(conf *Config, c <-chan string) (*backend, error) {
-	cache, err := lru.NewARC(5)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize cache: %w", err)
-	}
+type bot interface {
+	ChatByID(id int64) (*tele.Chat, error)
+	Handle(endpoint interface{}, h tele.HandlerFunc, m ...tele.MiddlewareFunc)
+	Send(to tele.Recipient, what interface{}, opts ...interface{}) (*tele.Message, error)
+}
 
+func newBot(conf *Config) (bot, error) {
 	b, err := tele.NewBot(tele.Settings{
 		Token:  os.Getenv(conf.TGToken),
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize telegram bot: %w", err)
+	}
+	return b, nil
+}
+
+func newBackend(conf *Config, b bot, c <-chan string) (*backend, error) {
+	cache, err := lru.NewARC(5)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize cache: %w", err)
 	}
 
 	chat, err := b.ChatByID(conf.TGChatID)
@@ -71,13 +87,12 @@ func newBackend(conf *Config, c <-chan string) (*backend, error) {
 	}, nil
 }
 
-func (b *backend) Start() {
+func (b *backend) start() {
 	for msg := range b.c {
 		lastSeenRaw, ok := b.cache.Get(msg)
 		if !ok {
-			if _, err := b.bot.Send(b.chat, msg); err != nil {
-				b.cache.Add(msg, time.Now())
-			}
+			_, _ = b.bot.Send(b.chat, msg)
+			b.cache.Add(msg, time.Now())
 			continue
 		}
 		lastSeen, ok := lastSeenRaw.(time.Time)
