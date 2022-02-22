@@ -2,7 +2,11 @@ module github.com/barklan/snitch
 
 go 1.17
 
-require go.uber.org/zap v1.21.0
+require (
+	github.com/hashicorp/golang-lru v0.5.4
+	go.uber.org/zap v1.21.0
+	gopkg.in/telebot.v3 v3.0.0
+)
 
 require (
 	go.uber.org/atomic v1.7.0 // indirect

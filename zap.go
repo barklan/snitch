@@ -1,6 +1,8 @@
 package snitch
 
 import (
+	"fmt"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -12,9 +14,13 @@ type ZapSnitch struct {
 }
 
 func OnZap(logger *zap.Logger, conf *Config) (*ZapSnitch, error) {
-	c := make(chan string)
+	c := make(chan string, 10)
 	// FIXME init bot here and return err if needed
-	go reporter(c, conf)
+	back, err := newBackend(conf, c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start backend: %w", err)
+	}
+	go back.Start()
 	return &ZapSnitch{
 		c:    c,
 		conf: conf,
