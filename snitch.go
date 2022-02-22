@@ -1,10 +1,9 @@
-// Package snitch implements a thin wrapper around logging packages
+// Package snitch implements a thin wrapper around `zap` logger
 // that snitches log messages according to log level to specified
 // Telegram chat through your bot.
 package snitch
 
 import (
-	"crypto/subtle"
 	"fmt"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 )
 
 const (
+	DebugPrefix = "DEBUG: "
 	InfoPrefix  = "INFO: "
 	WarnPrefix  = "WARN: "
 	ErrorPrefix = "ERROR: "
@@ -22,7 +22,8 @@ const (
 type Level uint8
 
 const (
-	InfoLevel Level = iota
+	DebugLevel Level = iota
+	InfoLevel
 	WarnLevel
 	ErrorLevel
 	CritLevel
@@ -30,7 +31,7 @@ const (
 
 type Config struct {
 	TGToken   string
-	Secret    string
+	TGChatID  int64
 	Level     Level
 	Cooldown  time.Duration
 	CacheSize int
@@ -68,33 +69,25 @@ func newBackend(conf *Config, b bot, c <-chan string) (*backend, error) {
 		return nil, fmt.Errorf("failed to initialize cache: %w", err)
 	}
 
+	chat, err := b.ChatByID(conf.TGChatID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find specified chat: %w", err)
+	}
+
 	backend := &backend{
 		conf:  conf,
 		bot:   b,
-		chat:  &tele.Chat{},
+		chat:  chat,
 		c:     c,
 		cache: cache,
 	}
 
 	b.Handle("/start", func(c tele.Context) error {
-		if backend.chat == nil {
-			c.Send("No chat is registered. Please send me the secret to register this chat.")
-			return nil
-		} else if backend.chat.ID != c.Chat().ID {
-			c.Send("Different chat is registered. Please send me the secret register to this chat.")
+		if backend.chat.ID != c.Chat().ID {
+			c.Send("Different chat is registered.")
 			return nil
 		}
 		c.Send("This chat is registered!")
-		return nil
-	})
-
-	b.Handle(tele.OnText, func(c tele.Context) error {
-		if subtle.ConstantTimeCompare([]byte(c.Message().Text), []byte(backend.conf.Secret)) == 1 {
-			backend.chat = c.Chat()
-			c.Send("Chat successfully registered!")
-			return nil
-		}
-		c.Send("Wrong secret key!")
 		return nil
 	})
 
@@ -104,11 +97,13 @@ func newBackend(conf *Config, b bot, c <-chan string) (*backend, error) {
 func (b *backend) start() {
 	go b.bot.Start()
 	for msg := range b.c {
-		lastSeenRaw, ok := b.cache.Get(msg)
+		lastSeenRaw, ok := b.cache.Peek(msg)
 		if !ok {
-			if _, err := b.bot.Send(b.chat, msg); err != nil {
-				b.cache.Add(msg, time.Now())
-			}
+			go func() {
+				if _, err := b.bot.Send(b.chat, msg); err == nil {
+					b.cache.Add(msg, time.Now())
+				}
+			}()
 			continue
 		}
 		lastSeen, ok := lastSeenRaw.(time.Time)
@@ -116,9 +111,11 @@ func (b *backend) start() {
 			continue
 		}
 		if time.Since(lastSeen) > b.conf.Cooldown {
-			if _, err := b.bot.Send(b.chat, msg); err != nil {
-				b.cache.Add(msg, time.Now())
-			}
+			go func() {
+				if _, err := b.bot.Send(b.chat, msg); err == nil {
+					b.cache.Add(msg, time.Now())
+				}
+			}()
 		}
 	}
 }
