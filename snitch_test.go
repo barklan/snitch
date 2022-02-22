@@ -2,6 +2,7 @@ package snitch
 
 import (
 	"testing"
+	"time"
 
 	mock_snitch "github.com/barklan/snitch/mock"
 	"github.com/golang/mock/gomock"
@@ -17,7 +18,8 @@ func mockPartialBack(t *testing.T) (*gomock.Controller, chan string, *Config, *m
 	conf := &Config{
 		TGToken:  "abc",
 		TGChatID: 342495235534,
-		Level:    ErrorLevel,
+		Level:    InfoLevel,
+		Cooldown: 50 * time.Millisecond,
 	}
 
 	c := make(chan string, 10)
@@ -25,41 +27,79 @@ func mockPartialBack(t *testing.T) (*gomock.Controller, chan string, *Config, *m
 }
 
 func TestZap(t *testing.T) {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		t.Errorf("failed to init zap logger")
-	}
+	t.Run("twice the same message should send only one", func(t *testing.T) {
+		ctrl, c, conf, m := mockPartialBack(t)
+		defer ctrl.Finish()
 
-	ctrl, c, conf, m := mockPartialBack(t)
-	defer ctrl.Finish()
-	snitch := &ZapSnitch{
-		c:    c,
-		conf: conf,
-		L:    logger,
-	}
+		logger, err := zap.NewDevelopment()
+		if err != nil {
+			t.Errorf("failed to init zap logger")
+		}
 
-	msg := "this is a log message"
+		snitch := &ZapSnitch{
+			c:    c,
+			Conf: conf,
+			L:    logger,
+		}
 
-	// Asserts that the first and only call to Bar() is passed 99.
-	// Anything else will fail.
-	m.
-		EXPECT().
-		ChatByID(gomock.Eq(conf.TGChatID))
+		msg := "this is a log message"
+		m.
+			EXPECT().
+			ChatByID(gomock.Eq(conf.TGChatID))
+		m.
+			EXPECT().Handle(gomock.Any(), gomock.Any())
+		m.
+			EXPECT().
+			Send(gomock.Any(), gomock.Eq(msg)).MaxTimes(1)
 
-	m.
-		EXPECT().Handle(gomock.Any(), gomock.Any())
+		back, err := newBackend(conf, m, c)
+		if err != nil {
+			t.Errorf("failed to init backend")
+		}
 
-	m.
-		EXPECT().
-		Send(gomock.Any(), gomock.Eq(msg)).MaxTimes(1)
+		go back.start()
+		snitch.Error(msg, zap.String("test", "test"))
+		snitch.Error(msg, zap.String("test", "test"))
+	})
+	t.Run("twice the same message after cooldown", func(t *testing.T) {
+		ctrl, c, conf, m := mockPartialBack(t)
+		defer ctrl.Finish()
 
-	back, err := newBackend(conf, m, c)
-	if err != nil {
-		t.Errorf("failed to init backend")
-	}
+		logger, err := zap.NewDevelopment()
+		if err != nil {
+			t.Errorf("failed to init zap logger")
+		}
 
-	go back.start()
+		snitch := &ZapSnitch{
+			c:    c,
+			Conf: conf,
+			L:    logger,
+		}
 
-	snitch.Error(msg, zap.String("test", "test"))
-	snitch.Error(msg, zap.String("test", "test"))
+		msg := "this is a log message"
+		m.
+			EXPECT().
+			ChatByID(gomock.Eq(conf.TGChatID))
+		m.
+			EXPECT().Handle(gomock.Any(), gomock.Any())
+		m.
+			EXPECT().
+			Send(gomock.Any(), gomock.Any()).Times(4)
+
+		back, err := newBackend(conf, m, c)
+		if err != nil {
+			t.Errorf("failed to init backend")
+		}
+
+		go back.start()
+		snitch.Error(msg, zap.String("test", "test"))
+		time.Sleep(80 * time.Millisecond)
+		snitch.Error(msg, zap.String("test", "test"))
+		time.Sleep(80 * time.Millisecond)
+		snitch.Warn("another message")
+		time.Sleep(80 * time.Millisecond)
+		snitch.Info("and info message")
+		time.Sleep(80 * time.Millisecond)
+		snitch.Debug("debug message should not be sent")
+	})
 }

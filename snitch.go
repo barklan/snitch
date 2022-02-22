@@ -32,6 +32,7 @@ type Config struct {
 	TGToken  string
 	TGChatID int64
 	Level    Level
+	Cooldown time.Duration
 }
 
 type backend struct {
@@ -99,8 +100,9 @@ func (b *backend) start() {
 		if !ok {
 			continue
 		}
-		if time.Since(lastSeen) > 5*time.Minute {
+		if time.Since(lastSeen) > b.conf.Cooldown {
 			b.cache.Add(msg, time.Now())
+			_, _ = b.bot.Send(b.chat, msg)
 		}
 	}
 }

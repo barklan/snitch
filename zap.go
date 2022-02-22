@@ -9,7 +9,7 @@ import (
 
 type ZapSnitch struct {
 	c    chan<- string
-	conf *Config
+	Conf *Config
 	L    *zap.Logger
 }
 
@@ -26,7 +26,7 @@ func OnZap(logger *zap.Logger, conf *Config) (*ZapSnitch, error) {
 	go back.start()
 	return &ZapSnitch{
 		c:    c,
-		conf: conf,
+		Conf: conf,
 		L:    logger,
 	}, nil
 }
@@ -36,35 +36,35 @@ func (s *ZapSnitch) Debug(msg string, fields ...zapcore.Field) {
 }
 
 func (s *ZapSnitch) Info(msg string, fields ...zapcore.Field) {
-	if s.conf.Level >= InfoLevel {
+	if s.Conf.Level <= InfoLevel {
 		s.c <- msg
 	}
 	s.L.Info(msg, fields...)
 }
 
 func (s *ZapSnitch) Warn(msg string, fields ...zapcore.Field) {
-	if s.conf.Level >= WarnLevel {
+	if s.Conf.Level <= WarnLevel {
 		s.c <- msg
 	}
 	s.L.Warn(msg, fields...)
 }
 
 func (s *ZapSnitch) Error(msg string, fields ...zapcore.Field) {
-	if s.conf.Level >= ErrorLevel {
+	if s.Conf.Level <= ErrorLevel {
 		s.c <- msg
 	}
 	s.L.Error(msg, fields...)
 }
 
 func (s *ZapSnitch) Panic(msg string, fields ...zapcore.Field) {
-	if s.conf.Level >= CritLevel {
+	if s.Conf.Level <= CritLevel {
 		s.c <- msg
 	}
 	s.L.Panic(msg, fields...)
 }
 
 func (s *ZapSnitch) Fatal(msg string, fields ...zapcore.Field) {
-	if s.conf.Level >= CritLevel {
+	if s.Conf.Level <= CritLevel {
 		s.c <- msg
 	}
 	s.L.Fatal(msg, fields...)
