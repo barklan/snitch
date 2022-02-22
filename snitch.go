@@ -6,7 +6,6 @@ package snitch
 import (
 	"crypto/subtle"
 	"fmt"
-	"log"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -107,11 +106,10 @@ func (b *backend) start() {
 	for msg := range b.c {
 		lastSeenRaw, ok := b.cache.Get(msg)
 		if !ok {
-			_, err := b.bot.Send(b.chat, msg)
-			if err != nil {
-				log.Println(err)
+			_, _ = b.bot.Send(b.chat, msg)
+			if b.chat.ID != 0 {
+				b.cache.Add(msg, time.Now())
 			}
-			b.cache.Add(msg, time.Now())
 			continue
 		}
 		lastSeen, ok := lastSeenRaw.(time.Time)
