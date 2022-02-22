@@ -102,7 +102,7 @@ func newBackend(conf *Config, b bot, c <-chan string) (*backend, error) {
 }
 
 func (b *backend) start() {
-	b.bot.Start()
+	go b.bot.Start()
 	for msg := range b.c {
 		lastSeenRaw, ok := b.cache.Get(msg)
 		if !ok {

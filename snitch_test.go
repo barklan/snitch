@@ -60,6 +60,7 @@ func TestZap(t *testing.T) {
 		}
 
 		go back.start()
+		time.Sleep(50 * time.Millisecond)
 		snitch.Error(msg, zap.String("test", "test"))
 		snitch.Error(msg, zap.String("test", "test"))
 	})
@@ -95,6 +96,7 @@ func TestZap(t *testing.T) {
 		}
 
 		go back.start()
+		time.Sleep(50 * time.Millisecond)
 		snitch.Error(msg, zap.String("test", "test"))
 		time.Sleep(80 * time.Millisecond)
 		snitch.Error(msg, zap.String("test", "test"))
