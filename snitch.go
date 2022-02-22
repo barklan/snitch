@@ -70,7 +70,7 @@ func newBackend(conf *Config, b bot, c <-chan string) (*backend, error) {
 	backend := &backend{
 		conf:  conf,
 		bot:   b,
-		chat:  nil,
+		chat:  &tele.Chat{},
 		c:     c,
 		cache: cache,
 	}
