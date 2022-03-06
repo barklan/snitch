@@ -1,16 +1,11 @@
 # snitch
 
-<img src="docs/tg.png" width=300 />
+<img src="docs/tg.png" width=400 />
 
-<p align="center">
-  <div>
-	Package snitch implements a thin wrapper around `zap` logger
-	that snitches log messages according to log level to specified
-	Telegram chat through your bot.
-	Mainly meant for small projects.
-  </div>
-</p>
-
+Package snitch implements a thin wrapper around `zap` logger
+that snitches log messages according to log level to specified
+Telegram chat through your bot.
+*Mainly meant for small projects.*
 
 ## Example Usage
 
