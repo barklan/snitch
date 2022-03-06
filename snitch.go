@@ -27,6 +27,7 @@ const (
 	WarnLevel
 	ErrorLevel
 	CritLevel
+	NoLevel
 )
 
 type Config struct {

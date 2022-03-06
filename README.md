@@ -1,8 +1,16 @@
 # snitch
 
-Package snitch implements a thin wrapper around `zap` logger
-that snitches log messages according to log level to specified
-Telegram chat through your bot.
+<img src="docs/tg.png" width=300 />
+
+<p align="center">
+  <div>
+	Package snitch implements a thin wrapper around `zap` logger
+	that snitches log messages according to log level to specified
+	Telegram chat through your bot.
+	Mainly meant for small projects.
+  </div>
+</p>
+
 
 ## Example Usage
 
@@ -24,9 +32,13 @@ func main() {
 
 	sn, err := snitch.OnZap(logger, &snitch.Config{
 		TGToken:   "50804fdfsf89383f3fxWu08889j9sdghopfuh8988FFFdI",
+		// Telegram chat ID.
 		TGChatID:  -438388543,
+		// Level above which to send logs.
 		Level:     snitch.InfoLevel,
+		// Don't send the same message for 30 seconds.
 		Cooldown:  30 * time.Second,
+		// Adaptive Replacement Cache size for log events.
 		CacheSize: 10,
 	})
 	if err != nil {
@@ -37,5 +49,4 @@ func main() {
 		sn.Info("some info message", zap.Time("time", time))
 	}
 }
-
 ```
