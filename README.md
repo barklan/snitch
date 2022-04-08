@@ -2,10 +2,11 @@
 
 <img src="docs/tg.png" width=400 />
 
+>**Meant for small projects. Don't try this at scale and don't trust all notifications to come through. It will not block logging, but will drop alerts on network errors, high loads or telegram rate limits.**
+
 Package snitch implements a thin wrapper around `zap` logger
 that snitches log messages according to log level to specified
 Telegram chat through your bot.
-*Mainly meant for small projects.*
 
 ## Example Usage
 
