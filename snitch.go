@@ -100,11 +100,9 @@ func (b *backend) start() {
 	for msg := range b.c {
 		lastSeenRaw, ok := b.cache.Peek(msg)
 		if !ok {
-			go func() {
-				if _, err := b.bot.Send(b.chat, msg); err == nil {
-					b.cache.Add(msg, time.Now())
-				}
-			}()
+			if _, err := b.bot.Send(b.chat, msg); err == nil {
+				b.cache.Add(msg, time.Now())
+			}
 			continue
 		}
 		lastSeen, ok := lastSeenRaw.(time.Time)
@@ -112,11 +110,9 @@ func (b *backend) start() {
 			continue
 		}
 		if time.Since(lastSeen) > b.conf.Cooldown {
-			go func() {
-				if _, err := b.bot.Send(b.chat, msg); err == nil {
-					b.cache.Add(msg, time.Now())
-				}
-			}()
+			if _, err := b.bot.Send(b.chat, msg); err == nil {
+				b.cache.Add(msg, time.Now())
+			}
 		}
 	}
 }

@@ -41,7 +41,7 @@ func (s *Zap) Debug(msg string, fields ...zapcore.Field) {
 		select {
 		case s.c <- DebugPrefix + msg:
 		default:
-			s.L.Debug("channely buzy, message dropped")
+			s.L.Debug("channel buzy, message dropped")
 		}
 	}
 	s.L.Debug(msg, fields...)
@@ -52,7 +52,7 @@ func (s *Zap) Info(msg string, fields ...zapcore.Field) {
 		select {
 		case s.c <- InfoPrefix + msg:
 		default:
-			s.L.Info("channely buzy, message dropped")
+			s.L.Info("channel buzy, message dropped")
 		}
 	}
 	s.L.Info(msg, fields...)
@@ -63,7 +63,7 @@ func (s *Zap) Warn(msg string, fields ...zapcore.Field) {
 		select {
 		case s.c <- WarnPrefix + msg:
 		default:
-			s.L.Warn("channely buzy, message dropped")
+			s.L.Warn("channel buzy, message dropped")
 		}
 	}
 	s.L.Warn(msg, fields...)
@@ -74,7 +74,7 @@ func (s *Zap) Error(msg string, fields ...zapcore.Field) {
 		select {
 		case s.c <- ErrorPrefix + msg:
 		default:
-			s.L.Error("channely buzy, message dropped")
+			s.L.Error("channel buzy, message dropped")
 		}
 	}
 	s.L.Error(msg, fields...)
